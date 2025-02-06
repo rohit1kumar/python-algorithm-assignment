@@ -19,15 +19,22 @@ def get_cache():
     )
 
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Close Redis connection on shutdown"""
+    cache = get_cache()
+    await cache.close()
+
+
 @app.post("/tsp/solve", response_model=TSPOutput)
 async def solve_tsp(data: TSPInput, cache: CacheService = Depends(get_cache)):
     """Solve the Problem 1: Traveling Salesman"""
     try:
         # Generate cache key
-        cache_key = cache.get_key("tsp", data.dict())
+        cache_key = await cache.get_key("tsp", data.dict())
 
         # Check cache
-        cached_result = cache.get(cache_key)
+        cached_result = await cache.get(cache_key)
         if cached_result:
             return TSPOutput.parse_raw(cached_result)
 
@@ -35,7 +42,7 @@ async def solve_tsp(data: TSPInput, cache: CacheService = Depends(get_cache)):
         result = TSPSolver.solve(data)
 
         # Cache the result
-        cache.set(cache_key, result.json())
+        await cache.set(cache_key, result.json())
 
         return result
     except ValueError as e:
@@ -50,10 +57,10 @@ async def solve_knapsack(data: KnapsackInput, cache: CacheService = Depends(get_
     """Solve the Problem 2: Knapsack"""
     try:
         # Generate cache key
-        cache_key = cache.get_key("knapsack", data.dict())
+        cache_key = await cache.get_key("knapsack", data.dict())
 
         # Check cache
-        cached_result = cache.get(cache_key)
+        cached_result = await cache.get(cache_key)
         if cached_result:
             return KnapsackOutput.parse_raw(cached_result)
 
@@ -61,7 +68,7 @@ async def solve_knapsack(data: KnapsackInput, cache: CacheService = Depends(get_
         result = KnapsackSolver.solve(data)
 
         # Cache the result
-        cache.set(cache_key, result.json())
+        await cache.set(cache_key, result.json())
 
         return result
     except ValueError as e:
