@@ -1,10 +1,11 @@
+import os
+from logging import getLogger
+from functools import lru_cache
 from fastapi import FastAPI, HTTPException, Depends
 from .schemas import TSPInput, TSPOutput, KnapsackInput, KnapsackOutput
 from .services.tsp_solver import TSPSolver
 from .services.knapsack_solver import KnapsackSolver
 from .cache import CacheService
-from logging import getLogger
-from functools import lru_cache
 
 app = FastAPI()
 logger = getLogger(__name__)
@@ -12,7 +13,10 @@ logger = getLogger(__name__)
 
 @lru_cache()
 def get_cache():
-    return CacheService()
+    return CacheService(
+        host=os.getenv("REDIS_HOST"),
+        port=int(os.getenv("REDIS_PORT")),
+    )
 
 
 @app.post("/tsp/solve", response_model=TSPOutput)
