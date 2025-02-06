@@ -2,33 +2,47 @@ from ..schemas import KnapsackInput, KnapsackOutput
 
 
 class KnapsackSolver:
+    """
+    Solves the 0/1 Knapsack problem using dynamic programming.
+    """
+
     @staticmethod
     def solve(data: KnapsackInput) -> KnapsackOutput:
+        """
+        Solves the knapsack problem and returns the optimal selection of items.
+        """
         if data.max_weight < 0:
             raise ValueError("Maximum weight cannot be negative")
 
-        n = len(data.items)
-        W = int(data.max_weight)
-        dp = [[0.0 for _ in range(W + 1)] for _ in range(n + 1)]
+        item_count = len(data.items)
+        max_capacity = int(data.max_weight)
+        dp_table = []
+        for _ in range(item_count + 1):
+            dp_table.append([0.0] * (max_capacity + 1))
 
-        # Fill DP table
-        for i in range(1, n + 1):
-            for w in range(W + 1):
-                if data.items[i - 1].weight <= w:
-                    dp[i][w] = max(
-                        data.items[i - 1].value
-                        + dp[i - 1][int(w - data.items[i - 1].weight)],
-                        dp[i - 1][w],
+        for item_idx in range(1, item_count + 1):
+            for weight in range(max_capacity + 1):
+                current_item = data.items[item_idx - 1]
+                if current_item.weight <= weight:
+                    dp_table[item_idx][weight] = max(
+                        current_item.value
+                        + dp_table[item_idx - 1][int(weight - current_item.weight)],
+                        dp_table[item_idx - 1][weight],
                     )
                 else:
-                    dp[i][w] = dp[i - 1][w]
+                    dp_table[item_idx][weight] = dp_table[item_idx - 1][weight]
 
-        # Backtrack to find selected items
         selected_items = []
-        w = W
-        for i in range(n, 0, -1):
-            if dp[i][w] != dp[i - 1][w]:
-                selected_items.append(data.items[i - 1].name)
-                w -= int(data.items[i - 1].weight)
+        remaining_weight = max_capacity
+        for item_idx in range(item_count, 0, -1):
+            if (
+                dp_table[item_idx][remaining_weight]
+                != dp_table[item_idx - 1][remaining_weight]
+            ):
+                selected_items.append(data.items[item_idx - 1].name)
+                remaining_weight -= int(data.items[item_idx - 1].weight)
 
-        return KnapsackOutput(selected_items=selected_items[::-1], total_value=dp[n][W])
+        return KnapsackOutput(
+            selected_items=selected_items[::-1],
+            total_value=dp_table[item_count][max_capacity],
+        )
