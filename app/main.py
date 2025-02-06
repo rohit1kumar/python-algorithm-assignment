@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from .schemas import TSPInput, TSPOutput, KnapsackInput, KnapsackOutput
 from .services.tsp_solver import TSPSolver
+from .services.knapsack_solver import KnapsackSolver
 from logging import getLogger
 
 app = FastAPI()
@@ -23,7 +24,9 @@ async def solve_tsp(data: TSPInput):
 async def solve_knapsack(data: KnapsackInput):
     """Solve the Problem 2: Knapsack"""
     try:
-        pass
+        return KnapsackSolver.solve(data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Error in solving TSP: {e}")
+        logger.error(f"Error in solving Knapsack problem: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
