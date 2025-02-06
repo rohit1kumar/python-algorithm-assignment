@@ -4,7 +4,7 @@ from typing import Optional
 
 
 class CacheService:
-    def __init__(self, host: str = "redis", port: int = 6379):
+    def __init__(self, host: str = "127.0.0.1", port: int = 6379):
         self.redis = Redis(host=host, port=port, decode_responses=True)
         self.expiry = 3600  # 1 hour cache expiry
 
@@ -20,5 +20,3 @@ class CacheService:
     def set(self, key: str, value: str) -> None:
         """Set value in cache with expiry"""
         self.redis.set(key, value, ex=self.expiry)
-
-
